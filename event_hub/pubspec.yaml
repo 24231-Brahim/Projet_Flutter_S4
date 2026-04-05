@@ -35,15 +35,44 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # Firebase
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.16.0
+  cloud_firestore: ^4.14.0
+  cloud_functions: ^4.5.8
+  firebase_storage: ^11.6.0
+  firebase_messaging: ^14.7.10
+
+  # Google Sign-In
+  google_sign_in: ^6.2.1
+
+  # Stripe
+  flutter_stripe: ^9.2.4
+
+  # State Management
+  provider: ^6.1.1
+
+  # Navigation
+  go_router: ^13.1.0
+
+  # Utils
+  intl: ^0.19.0
+  cached_network_image: ^3.3.1
+  flutter_local_notifications: ^16.3.0
+  image_picker: ^1.0.7
+  url_launcher: ^6.2.4
+  share_plus: ^7.2.1
+  qr_flutter: ^4.1.0
+  shared_preferences: ^2.2.2
+  shimmer: ^3.0.0
+  url_strategy: ^0.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
+  mocktail: ^1.0.3
+
   flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the

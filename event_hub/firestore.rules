@@ -1,0 +1,229 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOrganisateur() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organisateur';
+    }
+    
+    function isOrganisateurOrAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organisateur' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    function isEventOwner(eventId) {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/events/$(eventId)).data.organisateurId == request.auth.uid;
+    }
+    
+    function isPublished() {
+      return resource.data.estPublie == true;
+    }
+    
+    function isNotDeleted() {
+      return resource.data.deleted != true;
+    }
+    
+    function isValidString(value, maxLength) {
+      return value is string && value.size() > 0 && value.size() <= maxLength;
+    }
+    
+    function isValidNumber(value, min, max) {
+      return value is number && value >= min && value <= max;
+    }
+    
+    // =====================
+    // USERS COLLECTION
+    // =====================
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        isOwner(userId) || 
+        isAdmin() ||
+        isPublished()
+      );
+      
+      allow create: if isAuthenticated() && isOwner(userId) &&
+        isValidString(request.resource.data.nom, 100) &&
+        isValidString(request.resource.data.email, 320);
+      
+      allow update: if isAuthenticated() && (
+        isOwner(userId) ||
+        isAdmin()
+      ) && (
+        // Users can update their own profile
+        (isOwner(userId) && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'nom', 'telephone', 'photoURL', 'favoris', 'fcmToken', 'updatedAt'
+          ]) ||
+          // Admins can update any field except uid and email
+          (isAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'nom', 'telephone', 'photoURL', 'favoris', 'fcmToken', 'role', 'verifie', 'updatedAt'
+          ]))
+        ))
+      );
+      
+      allow delete: if isAdmin();
+    }
+    
+    // =====================
+    // EVENTS COLLECTION
+    // =====================
+    match /events/{eventId} {
+      // Anyone can read published events
+      allow read: if isPublished() || 
+        (isAuthenticated() && (
+          isEventOwner(eventId) || 
+          isAdmin() ||
+          isOrganisateur()
+        ));
+      
+      // Only authenticated organisers and admins can create events
+      allow create: if isAuthenticated() && isOrganisateurOrAdmin() &&
+        isValidString(request.resource.data.titre, 200) &&
+        isValidString(request.resource.data.description, 10000) &&
+        isValidString(request.resource.data.categorie, 100) &&
+        isValidString(request.resource.data.lieu, 500) &&
+        isValidNumber(request.resource.data.capaciteTotale, 1, 1000000) &&
+        request.resource.data.organisateurId == request.auth.uid;
+      
+      // Only owner or admin can update
+      allow update: if isAuthenticated() && (
+        isEventOwner(eventId) || isAdmin()
+      ) && (
+        // Prevent changing certain fields
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['eventId']) &&
+        // Only owner can update certain sensitive fields
+        (isEventOwner(eventId) || isAdmin())
+      );
+      
+      // Only admin can delete published events
+      allow delete: if isAuthenticated() && (
+        (isEventOwner(eventId) && resource.data.statut != 'published') ||
+        isAdmin()
+      );
+    }
+    
+    // =====================
+    // TICKETS SUB-COLLECTION
+    // =====================
+    match /events/{eventId}/tickets/{ticketId} {
+      // Anyone can read tickets
+      allow read: if true;
+      
+      // Only event owner or admin can write tickets
+      allow write: if isAuthenticated() && (
+        isEventOwner(eventId) || isAdmin()
+      );
+    }
+    
+    // =====================
+    // BOOKINGS COLLECTION
+    // =====================
+    match /bookings/{bookingId} {
+      // Users can only read their own bookings
+      // Event owners and admins can read bookings for their events
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin() ||
+        (isOrganisateurOrAdmin() && 
+          get(/databases/$(database)/documents/events/$(resource.data.eventId)).data.organisateurId == request.auth.uid
+        )
+      );
+      
+      // Cloud Functions handle booking creation through transactions
+      // Client can only create via callable functions
+      allow create, update: if false; // All writes handled by Cloud Functions
+      
+      allow delete: if false; // Cloud Functions handle all modifications
+    }
+    
+    // =====================
+    // PAYMENTS COLLECTION
+    // =====================
+    match /payments/{paymentId} {
+      // No direct client access - Cloud Functions only
+      allow read, write: if false;
+    }
+    
+    // =====================
+    // NOTIFICATIONS COLLECTION
+    // =====================
+    match /notifications/{notifId} {
+      // Users can only read and update their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lue']);
+      
+      allow create, delete: if false; // Cloud Functions only
+    }
+    
+    // =====================
+    // REVIEWS COLLECTION
+    // =====================
+    match /reviews/{reviewId} {
+      // Anyone can read reviews
+      allow read: if true;
+      
+      // Authenticated users can create reviews
+      allow create: if isAuthenticated() &&
+        isValidString(request.resource.data.commentaire, 2000) &&
+        request.resource.data.userId == request.auth.uid &&
+        isValidNumber(request.resource.data.note, 1, 5);
+      
+      // Only the review owner can update their review
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['note', 'commentaire', 'updatedAt']);
+      
+      // Review owner or admin can delete
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+    
+    // =====================
+    // CATEGORIES COLLECTION
+    // =====================
+    match /categories/{categoryId} {
+      // Anyone can read categories
+      allow read: if true;
+      
+      // Only admin can write categories
+      allow write: if isAdmin();
+    }
+    
+    // =====================
+    // REVIEW REPORTS COLLECTION
+    // =====================
+    match /reviewReports/{reportId} {
+      // Only admin can read reports
+      allow read: if isAdmin();
+      
+      // Authenticated users can create reports
+      allow create: if isAuthenticated() &&
+        request.resource.data.reportedBy == request.auth.uid;
+      
+      allow update, delete: if isAdmin();
+    }
+  }
+}

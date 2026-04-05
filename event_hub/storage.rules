@@ -1,0 +1,134 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+    
+    function isAdmin() {
+      return request.auth != null && 
+        getAfter(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOrganisateur() {
+      return request.auth != null && 
+        (getAfter(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'organisateur' ||
+         getAfter(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    function isEventOwner(eventId) {
+      return request.auth != null && 
+        getAfter(/databases/(default)/documents/events/$(eventId)).data.organisateurId == request.auth.uid;
+    }
+    
+    function isBookingOwner(bookingId) {
+      return request.auth != null && 
+        getAfter(/databases/(default)/documents/bookings/$(bookingId)).data.userId == request.auth.uid;
+    }
+    
+    function isImageFile() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isPdfFile() {
+      return request.resource.contentType == 'application/pdf';
+    }
+    
+    function isUnderSizeLimit(sizeInMB) {
+      return request.resource.size < sizeInMB * 1024 * 1024;
+    }
+    
+    // =====================
+    // EVENT IMAGES
+    // /events/{eventId}/cover/*
+    // =====================
+    match /events/{eventId}/cover/{fileName} {
+      // Anyone can read event cover images
+      allow read: if true;
+      
+      // Event owner or admin can upload
+      allow create: if isAuthenticated() && (
+        isEventOwner(eventId) || isAdmin()
+      ) &&
+        isImageFile() &&
+        isUnderSizeLimit(10);
+      
+      // Event owner or admin can update
+      allow update: if isAuthenticated() && (
+        isEventOwner(eventId) || isAdmin()
+      ) &&
+        isImageFile() &&
+        isUnderSizeLimit(10);
+      
+      // Event owner or admin can delete
+      allow delete: if isAuthenticated() && (
+        isEventOwner(eventId) || isAdmin()
+      );
+    }
+    
+    // =====================
+    // TICKET FILES
+    // /tickets/{bookingId}/*
+    // =====================
+    match /tickets/{bookingId}/{fileName} {
+      // Only the booking owner can read their tickets
+      allow read: if isAuthenticated() && (
+        isBookingOwner(bookingId) || isAdmin()
+      );
+      
+      // Only through Cloud Functions
+      allow write: if false;
+    }
+    
+    // =====================
+    // USER AVATARS
+    // /users/{uid}/avatar/*
+    // =====================
+    match /users/{uid}/avatar/{fileName} {
+      // Public read
+      allow read: if true;
+      
+      // Only the user can write their own avatar
+      allow create, update: if isAuthenticated() && isOwner(uid) &&
+        isImageFile() &&
+        isUnderSizeLimit(5);
+      
+      // Only the user can delete their own avatar
+      allow delete: if isAuthenticated() && isOwner(uid);
+    }
+    
+    // =====================
+    // ORGANIZER VERIFICATION DOCS
+    // /documents/{uid}/{fileName}
+    // =====================
+    match /documents/{uid}/{fileName} {
+      // Only the user and admin can read
+      allow read: if isAuthenticated() && (
+        isOwner(uid) || isAdmin()
+      );
+      
+      // Only the user can upload verification documents
+      allow create: if isAuthenticated() && isOwner(uid) &&
+        (isPdfFile() || isImageFile()) &&
+        isUnderSizeLimit(20);
+      
+      allow update, delete: if isAuthenticated() && (
+        isOwner(uid) || isAdmin()
+      );
+    }
+    
+    // =====================
+    // DEFAULT DENY
+    // =====================
+    match /{everythingElse=**} {
+      allow read, write: if false;
+    }
+  }
+}
