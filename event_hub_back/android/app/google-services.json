@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "911341315756",
+    "project_id": "smart-notes-b2218",
+    "storage_bucket": "smart-notes-b2218.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:911341315756:android:1f78a4c4e37f70a3a9e109",
+        "android_client_info": {
+          "package_name": "com.example.event_hub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpYIFEHD7PFTsoxNzjhozWEVMNi1N6wKM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:911341315756:android:9629415d827c4a00a9e109",
+        "android_client_info": {
+          "package_name": "com.example.tp1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBpYIFEHD7PFTsoxNzjhozWEVMNi1N6wKM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
