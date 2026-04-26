@@ -7,10 +7,8 @@ import com.eventhub.dto.response.PageResponse;
 import com.eventhub.security.service.CustomUserDetailsService;
 import com.eventhub.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -21,7 +19,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
-@RequiredArgsConstructor
 @Tag(name = "Notifications", description = "Gestion des notifications")
 @SecurityRequirement(name = "bearerAuth")
 public class NotificationController {
@@ -29,21 +26,23 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final CustomUserDetailsService userDetailsService;
 
+    public NotificationController(NotificationService notificationService, CustomUserDetailsService userDetailsService) {
+        this.notificationService = notificationService;
+        this.userDetailsService = userDetailsService;
+    }
+
     @PostMapping
     @Operation(summary = "Créer une notification", description = "Créer une nouvelle notification (admin)")
-    public ResponseEntity<ApiResponse<NotificationResponse>> createNotification(
-            @RequestBody CreateNotificationRequest request
-    ) {
+    public ResponseEntity<ApiResponse<NotificationResponse>> createNotification(@RequestBody CreateNotificationRequest request) {
         NotificationResponse response = notificationService.createNotification(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Notification créée", response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Notification créée", response));
     }
 
     @GetMapping("/my")
     @Operation(summary = "Mes notifications", description = "Récupérer les notifications de l'utilisateur connecté")
     public ResponseEntity<ApiResponse<PageResponse<NotificationResponse>>> getMyNotifications(
-            @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Taille de page") @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
         String userId = userDetailsService.getCurrentUserId();
         Pageable pageable = PageRequest.of(page, size);
@@ -54,8 +53,8 @@ public class NotificationController {
     @GetMapping("/unread")
     @Operation(summary = "Notifications non lues", description = "Récupérer les notifications non lues")
     public ResponseEntity<ApiResponse<PageResponse<NotificationResponse>>> getUnreadNotifications(
-            @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Taille de page") @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
         String userId = userDetailsService.getCurrentUserId();
         Pageable pageable = PageRequest.of(page, size);
@@ -73,9 +72,7 @@ public class NotificationController {
 
     @PutMapping("/{notifId}/read")
     @Operation(summary = "Marquer comme lu", description = "Marquer une notification comme lue")
-    public ResponseEntity<ApiResponse<NotificationResponse>> markAsRead(
-            @PathVariable String notifId
-    ) {
+    public ResponseEntity<ApiResponse<NotificationResponse>> markAsRead(@PathVariable String notifId) {
         String userId = userDetailsService.getCurrentUserId();
         NotificationResponse response = notificationService.markAsRead(notifId, userId);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -91,9 +88,7 @@ public class NotificationController {
 
     @DeleteMapping("/{notifId}")
     @Operation(summary = "Supprimer une notification", description = "Supprimer une notification")
-    public ResponseEntity<ApiResponse<Void>> deleteNotification(
-            @PathVariable String notifId
-    ) {
+    public ResponseEntity<ApiResponse<Void>> deleteNotification(@PathVariable String notifId) {
         String userId = userDetailsService.getCurrentUserId();
         notificationService.deleteNotification(notifId, userId);
         return ResponseEntity.ok(ApiResponse.success("Notification supprimée", null));

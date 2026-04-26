@@ -9,8 +9,8 @@ import com.eventhub.entity.Ticket;
 import com.eventhub.exception.*;
 import com.eventhub.mapper.TicketMapper;
 import com.eventhub.repository.TicketRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,13 +19,19 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class TicketService {
+
+    private static final Logger log = LoggerFactory.getLogger(TicketService.class);
 
     private final TicketRepository ticketRepository;
     private final EventService eventService;
     private final TicketMapper ticketMapper;
+
+    public TicketService(TicketRepository ticketRepository, EventService eventService, TicketMapper ticketMapper) {
+        this.ticketRepository = ticketRepository;
+        this.eventService = eventService;
+        this.ticketMapper = ticketMapper;
+    }
 
     @Transactional
     public TicketResponse createTicket(CreateTicketRequest request, String userId) {
@@ -113,14 +119,14 @@ public class TicketService {
     }
 
     private PageResponse<TicketResponse> toPageResponse(Page<Ticket> page) {
-        return PageResponse.<TicketResponse>builder()
-                .content(ticketMapper.toResponses(page.getContent()))
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .first(page.isFirst())
-                .last(page.isLast())
-                .build();
+        PageResponse<TicketResponse> response = new PageResponse<>();
+        response.setContent(ticketMapper.toResponses(page.getContent()));
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalElements(page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        response.setFirst(page.isFirst());
+        response.setLast(page.isLast());
+        return response;
     }
 }

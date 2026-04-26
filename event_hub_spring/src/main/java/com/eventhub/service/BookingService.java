@@ -11,8 +11,8 @@ import com.eventhub.entity.User;
 import com.eventhub.exception.*;
 import com.eventhub.mapper.BookingMapper;
 import com.eventhub.repository.BookingRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,15 +23,24 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class BookingService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
     private final BookingRepository bookingRepository;
     private final EventService eventService;
     private final TicketService ticketService;
     private final UserService userService;
     private final BookingMapper bookingMapper;
+
+    public BookingService(BookingRepository bookingRepository, EventService eventService,
+                          TicketService ticketService, UserService userService, BookingMapper bookingMapper) {
+        this.bookingRepository = bookingRepository;
+        this.eventService = eventService;
+        this.ticketService = ticketService;
+        this.userService = userService;
+        this.bookingMapper = bookingMapper;
+    }
 
     @Transactional
     public BookingResponse createBooking(CreateBookingRequest request, String userId) {
@@ -51,16 +60,15 @@ public class BookingService {
 
         double montantTotal = ticket.getPrix() * request.getQuantite();
 
-        Booking booking = Booking.builder()
-                .user(user)
-                .event(event)
-                .ticket(ticket)
-                .quantite(request.getQuantite())
-                .montantTotal(montantTotal)
-                .devise(request.getDevise() != null ? request.getDevise() : "USD")
-                .statut("pending")
-                .qrCodeToken(UUID.randomUUID().toString())
-                .build();
+        Booking booking = new Booking();
+        booking.setUser(user);
+        booking.setEvent(event);
+        booking.setTicket(ticket);
+        booking.setQuantite(request.getQuantite());
+        booking.setMontantTotal(montantTotal);
+        booking.setDevise(request.getDevise() != null ? request.getDevise() : "USD");
+        booking.setStatut("pending");
+        booking.setQrCodeToken(UUID.randomUUID().toString());
 
         booking = bookingRepository.save(booking);
 
@@ -78,8 +86,7 @@ public class BookingService {
             throw new InvalidRequestException("Cette réservation a été annulée");
         }
 
-        // Simuler la génération d'un client secret (en réalité, cela viendrait de Stripe/PayPal)
-        String clientSecret = "pi_" + UUID.randomUUID().toString() + "_secret_" + UUID.randomUUID().toString();
+        String clientSecret = "pi_" + UUID.randomUUID() + "_secret_" + UUID.randomUUID();
         booking.setPaymentId(clientSecret.split("_secret")[0]);
         booking = bookingRepository.save(booking);
 
@@ -98,10 +105,6 @@ public class BookingService {
 
         booking.setStatut("confirmed");
         booking = bookingRepository.save(booking);
-
-        Event event = booking.getEvent();
-        event.setPlacesRestantes(event.getPlacesRestantes() - booking.getQuantite());
-        eventService.getEventEntity(event.getEventId());
 
         log.info("Booking confirmed: {}", bookingId);
         return bookingMapper.toResponse(booking);
@@ -186,14 +189,14 @@ public class BookingService {
     }
 
     private PageResponse<BookingResponse> toPageResponse(Page<Booking> page) {
-        return PageResponse.<BookingResponse>builder()
-                .content(bookingMapper.toResponses(page.getContent()))
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .first(page.isFirst())
-                .last(page.isLast())
-                .build();
+        PageResponse<BookingResponse> response = new PageResponse<>();
+        response.setContent(bookingMapper.toResponses(page.getContent()));
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalElements(page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        response.setFirst(page.isFirst());
+        response.setLast(page.isLast());
+        return response;
     }
 }

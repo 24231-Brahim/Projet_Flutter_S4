@@ -8,11 +8,9 @@ import com.eventhub.dto.response.PageResponse;
 import com.eventhub.security.service.CustomUserDetailsService;
 import com.eventhub.service.BookingService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,13 +22,17 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/bookings")
-@RequiredArgsConstructor
 @Tag(name = "Bookings", description = "Gestion des réservations")
 @SecurityRequirement(name = "bearerAuth")
 public class BookingController {
 
     private final BookingService bookingService;
     private final CustomUserDetailsService userDetailsService;
+
+    public BookingController(BookingService bookingService, CustomUserDetailsService userDetailsService) {
+        this.bookingService = bookingService;
+        this.userDetailsService = userDetailsService;
+    }
 
     @PostMapping
     @Operation(summary = "Créer une réservation", description = "Créer une nouvelle réservation")
@@ -40,42 +42,33 @@ public class BookingController {
     ) {
         String userId = userDetailsService.getCurrentUserId();
         BookingResponse response = bookingService.createBooking(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Réservation créée", response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Réservation créée", response));
     }
 
     @PostMapping("/{bookingId}/initiate-payment")
     @Operation(summary = "Initier le paiement", description = "Initier le processus de paiement pour une réservation")
-    public ResponseEntity<ApiResponse<BookingWithClientSecretResponse>> initiatePayment(
-            @PathVariable String bookingId
-    ) {
+    public ResponseEntity<ApiResponse<BookingWithClientSecretResponse>> initiatePayment(@PathVariable String bookingId) {
         BookingWithClientSecretResponse response = bookingService.initiatePayment(bookingId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/{bookingId}/confirm")
     @Operation(summary = "Confirmer la réservation", description = "Confirmer une réservation après paiement")
-    public ResponseEntity<ApiResponse<BookingResponse>> confirmBooking(
-            @PathVariable String bookingId
-    ) {
+    public ResponseEntity<ApiResponse<BookingResponse>> confirmBooking(@PathVariable String bookingId) {
         BookingResponse response = bookingService.confirmBooking(bookingId);
         return ResponseEntity.ok(ApiResponse.success("Réservation confirmée", response));
     }
 
     @GetMapping("/{bookingId}")
     @Operation(summary = "Détail réservation", description = "Récupérer les détails d'une réservation")
-    public ResponseEntity<ApiResponse<BookingResponse>> getBookingById(
-            @PathVariable String bookingId
-    ) {
+    public ResponseEntity<ApiResponse<BookingResponse>> getBookingById(@PathVariable String bookingId) {
         BookingResponse response = bookingService.getBookingById(bookingId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/qr/{qrToken}")
     @Operation(summary = "Réservation par QR", description = "Récupérer une réservation par son token QR")
-    public ResponseEntity<ApiResponse<BookingResponse>> getBookingByQrToken(
-            @PathVariable String qrToken
-    ) {
+    public ResponseEntity<ApiResponse<BookingResponse>> getBookingByQrToken(@PathVariable String qrToken) {
         BookingResponse response = bookingService.getBookingByQrToken(qrToken);
         return ResponseEntity.ok(ApiResponse.success(response));
     }

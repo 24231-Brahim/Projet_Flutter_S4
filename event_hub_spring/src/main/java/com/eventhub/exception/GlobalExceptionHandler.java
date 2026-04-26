@@ -1,9 +1,5 @@
 package com.eventhub.exception;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -20,67 +16,37 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
-        ErrorResponse error = ErrorResponse.builder()
-                .error("Not Found")
-                .message(ex.getMessage())
-                .status(HttpStatus.NOT_FOUND.value())
-                .timestamp(LocalDateTime.now())
-                .build();
+        ErrorResponse error = ErrorResponse.of("Not Found", ex.getMessage(), HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
-        ErrorResponse error = ErrorResponse.builder()
-                .error("Conflict")
-                .message(ex.getMessage())
-                .status(HttpStatus.CONFLICT.value())
-                .timestamp(LocalDateTime.now())
-                .build();
+        ErrorResponse error = ErrorResponse.of("Conflict", ex.getMessage(), HttpStatus.CONFLICT.value());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex) {
-        ErrorResponse error = ErrorResponse.builder()
-                .error("Unauthorized")
-                .message(ex.getMessage())
-                .status(HttpStatus.UNAUTHORIZED.value())
-                .timestamp(LocalDateTime.now())
-                .build();
+        ErrorResponse error = ErrorResponse.of("Unauthorized", ex.getMessage(), HttpStatus.UNAUTHORIZED.value());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex) {
-        ErrorResponse error = ErrorResponse.builder()
-                .error("Forbidden")
-                .message(ex.getMessage())
-                .status(HttpStatus.FORBIDDEN.value())
-                .timestamp(LocalDateTime.now())
-                .build();
+        ErrorResponse error = ErrorResponse.of("Forbidden", ex.getMessage(), HttpStatus.FORBIDDEN.value());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRequest(InvalidRequestException ex) {
-        ErrorResponse error = ErrorResponse.builder()
-                .error("Bad Request")
-                .message(ex.getMessage())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .timestamp(LocalDateTime.now())
-                .build();
+        ErrorResponse error = ErrorResponse.of("Bad Request", ex.getMessage(), HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(InsufficientStockException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientStock(InsufficientStockException ex) {
-        ErrorResponse error = ErrorResponse.builder()
-                .error("Unprocessable Entity")
-                .message(ex.getMessage())
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .timestamp(LocalDateTime.now())
-                .build();
+        ErrorResponse error = ErrorResponse.of("Unprocessable Entity", ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value());
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
 
@@ -92,24 +58,18 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.toList());
 
-        ErrorResponse error = ErrorResponse.builder()
-                .error("Validation Error")
-                .message("Les données fournies sont invalides")
-                .status(HttpStatus.BAD_REQUEST.value())
-                .timestamp(LocalDateTime.now())
-                .errors(errors)
-                .build();
+        ErrorResponse error = new ErrorResponse();
+        error.setError("Validation Error");
+        error.setMessage("Les données fournies sont invalides");
+        error.setStatus(HttpStatus.BAD_REQUEST.value());
+        error.setTimestamp(LocalDateTime.now());
+        error.setErrors(errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        ErrorResponse error = ErrorResponse.builder()
-                .error("Internal Server Error")
-                .message("Une erreur inattendue s'est produite")
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .timestamp(LocalDateTime.now())
-                .build();
+        ErrorResponse error = ErrorResponse.of("Internal Server Error", "Une erreur inattendue s'est produite", HttpStatus.INTERNAL_SERVER_ERROR.value());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

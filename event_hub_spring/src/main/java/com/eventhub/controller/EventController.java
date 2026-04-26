@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -27,24 +26,26 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/events")
-@RequiredArgsConstructor
 @Tag(name = "Events", description = "Gestion des événements")
 public class EventController {
 
     private final EventService eventService;
     private final CustomUserDetailsService userDetailsService;
 
+    public EventController(EventService eventService, CustomUserDetailsService userDetailsService) {
+        this.eventService = eventService;
+        this.userDetailsService = userDetailsService;
+    }
+
     @GetMapping
     @Operation(summary = "Liste des événements", description = "Récupérer une liste paginée d'événements publiés")
     public ResponseEntity<ApiResponse<PageResponse<EventResponse>>> getEvents(
-            @Parameter(description = "Numéro de page") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Taille de page") @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "Trier par") @RequestParam(defaultValue = "dateDebut") String sortBy,
-            @Parameter(description = "Direction du tri") @RequestParam(defaultValue = "desc") String sortDir
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "dateDebut") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
     ) {
-        Sort sort = sortDir.equalsIgnoreCase("asc") 
-                ? Sort.by(sortBy).ascending() 
-                : Sort.by(sortBy).descending();
+        Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         PageResponse<EventResponse> response = eventService.getPublishedEvents(pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -105,23 +106,17 @@ public class EventController {
 
     @GetMapping("/{eventId}")
     @Operation(summary = "Détail événement", description = "Récupérer les détails d'un événement")
-    public ResponseEntity<ApiResponse<EventResponse>> getEventById(
-            @PathVariable String eventId
-    ) {
+    public ResponseEntity<ApiResponse<EventResponse>> getEventById(@PathVariable String eventId) {
         EventResponse response = eventService.getEventById(eventId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/{eventId}/full")
     @Operation(summary = "Événement avec tickets", description = "Récupérer un événement avec ses tickets")
-    public ResponseEntity<ApiResponse<EventWithTicketsResponse>> getEventWithTickets(
-            @PathVariable String eventId
-    ) {
+    public ResponseEntity<ApiResponse<EventWithTicketsResponse>> getEventWithTickets(@PathVariable String eventId) {
         EventWithTicketsResponse response = eventService.getEventWithTickets(eventId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
-
-    // Protected endpoints below
 
     @PostMapping
     @SecurityRequirement(name = "bearerAuth")
@@ -132,8 +127,7 @@ public class EventController {
     ) {
         String userId = userDetailsService.getCurrentUserId();
         EventResponse response = eventService.createEvent(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Événement créé", response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Événement créé", response));
     }
 
     @PutMapping("/{eventId}")

@@ -4,7 +4,6 @@ import com.eventhub.dto.request.CreateReviewRequest;
 import com.eventhub.dto.response.PageResponse;
 import com.eventhub.dto.response.ReviewResponse;
 import com.eventhub.dto.response.ReviewStatsResponse;
-import com.eventhub.entity.Booking;
 import com.eventhub.entity.Event;
 import com.eventhub.entity.Review;
 import com.eventhub.entity.User;
@@ -13,17 +12,17 @@ import com.eventhub.mapper.ReviewMapper;
 import com.eventhub.repository.BookingRepository;
 import com.eventhub.repository.EventRepository;
 import com.eventhub.repository.ReviewRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class ReviewService {
+
+    private static final Logger log = LoggerFactory.getLogger(ReviewService.class);
 
     private final ReviewRepository reviewRepository;
     private final EventRepository eventRepository;
@@ -31,6 +30,17 @@ public class ReviewService {
     private final EventService eventService;
     private final UserService userService;
     private final ReviewMapper reviewMapper;
+
+    public ReviewService(ReviewRepository reviewRepository, EventRepository eventRepository,
+                         BookingRepository bookingRepository, EventService eventService,
+                         UserService userService, ReviewMapper reviewMapper) {
+        this.reviewRepository = reviewRepository;
+        this.eventRepository = eventRepository;
+        this.bookingRepository = bookingRepository;
+        this.eventService = eventService;
+        this.userService = userService;
+        this.reviewMapper = reviewMapper;
+    }
 
     @Transactional
     public ReviewResponse createReview(CreateReviewRequest request, String userId) {
@@ -48,13 +58,12 @@ public class ReviewService {
             throw new UnauthorizedException("Vous devez avoir assisté à cet événement pour laisser un avis");
         }
 
-        Review review = Review.builder()
-                .user(user)
-                .event(event)
-                .note(request.getNote())
-                .commentaire(request.getCommentaire() != null ? request.getCommentaire() : "")
-                .verifie(true)
-                .build();
+        Review review = new Review();
+        review.setUser(user);
+        review.setEvent(event);
+        review.setNote(request.getNote());
+        review.setCommentaire(request.getCommentaire() != null ? request.getCommentaire() : "");
+        review.setVerifie(true);
 
         review = reviewRepository.save(review);
         updateEventRating(event.getEventId());
@@ -122,14 +131,14 @@ public class ReviewService {
     }
 
     private PageResponse<ReviewResponse> toPageResponse(Page<Review> page) {
-        return PageResponse.<ReviewResponse>builder()
-                .content(reviewMapper.toResponses(page.getContent()))
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .first(page.isFirst())
-                .last(page.isLast())
-                .build();
+        PageResponse<ReviewResponse> response = new PageResponse<>();
+        response.setContent(reviewMapper.toResponses(page.getContent()));
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalElements(page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        response.setFirst(page.isFirst());
+        response.setLast(page.isLast());
+        return response;
     }
 }

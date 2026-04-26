@@ -1,18 +1,15 @@
 package com.eventhub.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class EventWithTicketsResponse {
-
     private EventResponse event;
     private List<TicketResponse> tickets;
+
+    public EventWithTicketsResponse() {}
+
+    public EventResponse getEvent() { return event; }
+    public void setEvent(EventResponse event) { this.event = event; }
+    public List<TicketResponse> getTickets() { return tickets; }
+    public void setTickets(List<TicketResponse> tickets) { this.tickets = tickets; }
 }

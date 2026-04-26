@@ -11,8 +11,8 @@ import com.eventhub.exception.*;
 import com.eventhub.mapper.UserMapper;
 import com.eventhub.repository.UserRepository;
 import com.eventhub.security.service.JwtService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,14 +20,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserMapper userMapper;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, UserMapper userMapper) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.userMapper = userMapper;
+    }
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -46,12 +53,12 @@ public class UserService {
 
         log.info("User registered successfully: {}", user.getUid());
 
-        return AuthResponse.builder()
-                .token(token)
-                .tokenType("Bearer")
-                .expiresIn(jwtService.getExpirationTime())
-                .user(userResponse)
-                .build();
+        AuthResponse response = new AuthResponse();
+        response.setToken(token);
+        response.setTokenType("Bearer");
+        response.setExpiresIn(jwtService.getExpirationTime());
+        response.setUser(userResponse);
+        return response;
     }
 
     @Transactional
@@ -70,12 +77,12 @@ public class UserService {
 
         log.info("User logged in successfully: {}", user.getUid());
 
-        return AuthResponse.builder()
-                .token(token)
-                .tokenType("Bearer")
-                .expiresIn(jwtService.getExpirationTime())
-                .user(userResponse)
-                .build();
+        AuthResponse response = new AuthResponse();
+        response.setToken(token);
+        response.setTokenType("Bearer");
+        response.setExpiresIn(jwtService.getExpirationTime());
+        response.setUser(userResponse);
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -99,7 +106,7 @@ public class UserService {
         User user = userRepository.findById(uid)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
 
-        user = userMapper.toEntity(user, request);
+        userMapper.updateEntity(user, request);
         user = userRepository.save(user);
 
         return userMapper.toResponse(user);
@@ -155,14 +162,14 @@ public class UserService {
     }
 
     private PageResponse<UserResponse> toPageResponse(Page<User> page) {
-        return PageResponse.<UserResponse>builder()
-                .content(userMapper.toResponses(page.getContent()))
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .first(page.isFirst())
-                .last(page.isLast())
-                .build();
+        PageResponse<UserResponse> response = new PageResponse<>();
+        response.setContent(userMapper.toResponses(page.getContent()));
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalElements(page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        response.setFirst(page.isFirst());
+        response.setLast(page.isLast());
+        return response;
     }
 }

@@ -2,19 +2,22 @@ package com.eventhub.security.service;
 
 import com.eventhub.entity.User;
 import com.eventhub.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
-@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
+
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -33,7 +36,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        org.springframework.security.core.Authentication authentication = 
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
@@ -47,7 +51,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return user != null ? user.getUid() : null;
     }
 
-    private java.util.Collection<? extends org.springframework.security.core.authority.SimpleGrantedAuthority> getAuthorities(String role) {
-        return java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+    private List<SimpleGrantedAuthority> getAuthorities(String role) {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
     }
 }

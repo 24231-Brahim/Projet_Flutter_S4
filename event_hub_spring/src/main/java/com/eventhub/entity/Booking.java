@@ -1,7 +1,6 @@
 package com.eventhub.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -11,11 +10,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "bookings")
 @EntityListeners(AuditingEntityListener.class)
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Booking {
 
     @Id
@@ -42,11 +36,9 @@ public class Booking {
     private Double montantTotal;
 
     @Column(nullable = false)
-    @Builder.Default
     private String devise = "USD";
 
     @Column(nullable = false)
-    @Builder.Default
     private String statut = "pending";
 
     @Column(name = "qr_code_token")
@@ -72,28 +64,43 @@ public class Booking {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Transient getters for Flutter model compatibility
-    public boolean isPending() {
-        return "pending".equals(statut);
-    }
+    public Booking() {}
 
-    public boolean isConfirmed() {
-        return "confirmed".equals(statut);
-    }
+    public String getBookingId() { return bookingId; }
+    public void setBookingId(String bookingId) { this.bookingId = bookingId; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public Event getEvent() { return event; }
+    public void setEvent(Event event) { this.event = event; }
+    public Ticket getTicket() { return ticket; }
+    public void setTicket(Ticket ticket) { this.ticket = ticket; }
+    public Integer getQuantite() { return quantite; }
+    public void setQuantite(Integer quantite) { this.quantite = quantite; }
+    public Double getMontantTotal() { return montantTotal; }
+    public void setMontantTotal(Double montantTotal) { this.montantTotal = montantTotal; }
+    public String getDevise() { return devise; }
+    public void setDevise(String devise) { this.devise = devise; }
+    public String getStatut() { return statut; }
+    public void setStatut(String statut) { this.statut = statut; }
+    public String getQrCodeToken() { return qrCodeToken; }
+    public void setQrCodeToken(String qrCodeToken) { this.qrCodeToken = qrCodeToken; }
+    public String getQrCodeURL() { return qrCodeURL; }
+    public void setQrCodeURL(String qrCodeURL) { this.qrCodeURL = qrCodeURL; }
+    public String getPdfURL() { return pdfURL; }
+    public void setPdfURL(String pdfURL) { this.pdfURL = pdfURL; }
+    public String getPaymentId() { return paymentId; }
+    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
+    public LocalDateTime getScannedAt() { return scannedAt; }
+    public void setScannedAt(LocalDateTime scannedAt) { this.scannedAt = scannedAt; }
+    public LocalDateTime getDateReservation() { return dateReservation; }
+    public void setDateReservation(LocalDateTime dateReservation) { this.dateReservation = dateReservation; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public boolean isCancelled() {
-        return "cancelled".equals(statut);
-    }
-
-    public boolean isRefunded() {
-        return "refunded".equals(statut);
-    }
-
-    public boolean isUsed() {
-        return "used".equals(statut);
-    }
-
-    public boolean isScanned() {
-        return scannedAt != null;
-    }
+    public boolean isPending() { return "pending".equals(statut); }
+    public boolean isConfirmed() { return "confirmed".equals(statut); }
+    public boolean isCancelled() { return "cancelled".equals(statut); }
+    public boolean isRefunded() { return "refunded".equals(statut); }
+    public boolean isUsed() { return "used".equals(statut); }
+    public boolean isScanned() { return scannedAt != null; }
 }

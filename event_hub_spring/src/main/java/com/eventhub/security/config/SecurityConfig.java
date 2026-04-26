@@ -2,7 +2,6 @@ package com.eventhub.security.config;
 
 import com.eventhub.security.filter.JwtAuthenticationFilter;
 import com.eventhub.security.service.CustomUserDetailsService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,22 +22,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
 
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, CustomUserDetailsService userDetailsService) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.userDetailsService = userDetailsService;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configure(http))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
                         .requestMatchers(
                                 "/api/v1/auth/**",
-                                "/api/v1/events/public/**",
                                 "/ws/**",
                                 "/actuator/**",
                                 "/swagger-ui/**",
@@ -49,24 +49,16 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/error"
                         ).permitAll()
-
-                        // Event search and categories (public)
                         .requestMatchers(HttpMethod.GET, "/api/v1/events").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/events/categories").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/events/*/reviews").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/events/*/reviews/stats").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/events/*/tickets").permitAll()
-
-                        // Admin only endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-
-                        // Organisateur endpoints
                         .requestMatchers(HttpMethod.POST, "/api/v1/events").hasAnyRole("ORGANISATEUR", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/events/**").hasAnyRole("ORGANISATEUR", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/events/**").hasAnyRole("ORGANISATEUR", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/tickets/**").hasAnyRole("ORGANISATEUR", "ADMIN")
-
-                        // Authenticated endpoints
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

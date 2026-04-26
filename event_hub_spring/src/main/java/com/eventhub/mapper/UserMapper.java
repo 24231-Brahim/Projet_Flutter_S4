@@ -5,66 +5,51 @@ import com.eventhub.dto.request.UpdateProfileRequest;
 import com.eventhub.dto.response.UserResponse;
 import com.eventhub.entity.User;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 @Component
 public class UserMapper {
 
     public User toEntity(RegisterRequest request, String passwordHash) {
-        return User.builder()
-                .nom(request.getNom())
-                .email(request.getEmail().toLowerCase())
-                .passwordHash(passwordHash)
-                .telephone(request.getTelephone() != null ? request.getTelephone() : "")
-                .photoURL(request.getPhotoURL() != null ? request.getPhotoURL() : "")
-                .role("user")
-                .verifie(false)
-                .build();
+        User user = new User();
+        user.setNom(request.getNom());
+        user.setEmail(request.getEmail().toLowerCase());
+        user.setPasswordHash(passwordHash);
+        user.setTelephone(request.getTelephone() != null ? request.getTelephone() : "");
+        user.setPhotoURL(request.getPhotoURL() != null ? request.getPhotoURL() : "");
+        user.setRole("user");
+        user.setVerifie(false);
+        return user;
     }
 
-    public User toEntity(User user, UpdateProfileRequest request) {
-        if (request.getNom() != null) {
-            user.setNom(request.getNom());
-        }
-        if (request.getTelephone() != null) {
-            user.setTelephone(request.getTelephone());
-        }
-        if (request.getPhotoURL() != null) {
-            user.setPhotoURL(request.getPhotoURL());
-        }
-        if (request.getFcmToken() != null) {
-            user.setFcmToken(request.getFcmToken());
-        }
-        if (request.getFavoris() != null) {
-            user.setFavoris(request.getFavoris());
-        }
-        return user;
+    public void updateEntity(User user, UpdateProfileRequest request) {
+        if (request.getNom() != null) user.setNom(request.getNom());
+        if (request.getTelephone() != null) user.setTelephone(request.getTelephone());
+        if (request.getPhotoURL() != null) user.setPhotoURL(request.getPhotoURL());
+        if (request.getFcmToken() != null) user.setFcmToken(request.getFcmToken());
+        if (request.getFavoris() != null) user.setFavoris(request.getFavoris());
     }
 
     public UserResponse toResponse(User user) {
         if (user == null) return null;
-
-        return UserResponse.builder()
-                .uid(user.getUid())
-                .nom(user.getNom())
-                .email(user.getEmail())
-                .telephone(user.getTelephone())
-                .photoURL(user.getPhotoURL())
-                .role(user.getRole())
-                .favoris(user.getFavoris())
-                .verifie(user.getVerifie())
-                .isOrganisateur(user.isOrganisateur())
-                .isAdmin(user.isAdmin())
-                .isVerified(user.isVerified())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
+        UserResponse response = new UserResponse();
+        response.setUid(user.getUid());
+        response.setNom(user.getNom());
+        response.setEmail(user.getEmail());
+        response.setTelephone(user.getTelephone());
+        response.setPhotoURL(user.getPhotoURL());
+        response.setRole(user.getRole());
+        response.setFavoris(user.getFavoris());
+        response.setVerifie(user.getVerifie());
+        response.setIsOrganisateur(user.isOrganisateur());
+        response.setIsAdmin(user.isAdmin());
+        response.setIsVerified(user.isVerified());
+        response.setCreatedAt(user.getCreatedAt());
+        response.setUpdatedAt(user.getUpdatedAt());
+        return response;
     }
 
     public List<UserResponse> toResponses(List<User> users) {
-        return users.stream()
-                .map(this::toResponse)
-                .toList();
+        return users.stream().map(this::toResponse).toList();
     }
 }

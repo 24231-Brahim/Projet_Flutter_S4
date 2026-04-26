@@ -1,7 +1,6 @@
 package com.eventhub.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -13,11 +12,6 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class User {
 
     @Id
@@ -38,20 +32,17 @@ public class User {
     private String photoURL;
 
     @Column(nullable = false)
-    @Builder.Default
     private String role = "user";
 
     @ElementCollection
     @CollectionTable(name = "user_favorites", joinColumns = @JoinColumn(name = "user_uid"))
     @Column(name = "event_id")
-    @Builder.Default
     private List<String> favoris = new ArrayList<>();
 
     @Column(name = "fcm_token")
     private String fcmToken;
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean verifie = false;
 
     @Column(name = "password_hash", nullable = false)
@@ -66,14 +57,42 @@ public class User {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
     private List<Booking> bookings = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
+    @OneToMany(mappedBy = "organisateur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Event> events = new ArrayList<>();
 
-    // Transient getters for Flutter model compatibility
+    public User() {}
+
+    public String getUid() { return uid; }
+    public void setUid(String uid) { this.uid = uid; }
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getTelephone() { return telephone; }
+    public void setTelephone(String telephone) { this.telephone = telephone; }
+    public String getPhotoURL() { return photoURL; }
+    public void setPhotoURL(String photoURL) { this.photoURL = photoURL; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    public List<String> getFavoris() { return favoris; }
+    public void setFavoris(List<String> favoris) { this.favoris = favoris; }
+    public String getFcmToken() { return fcmToken; }
+    public void setFcmToken(String fcmToken) { this.fcmToken = fcmToken; }
+    public Boolean getVerifie() { return verifie; }
+    public void setVerifie(Boolean verifie) { this.verifie = verifie; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public List<Booking> getBookings() { return bookings; }
+    public void setBookings(List<Booking> bookings) { this.bookings = bookings; }
+    public List<Event> getEvents() { return events; }
+    public void setEvents(List<Event> events) { this.events = events; }
+
     public boolean isOrganisateur() {
         return "organisateur".equals(role) || "admin".equals(role);
     }

@@ -1,20 +1,11 @@
 package com.eventhub.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class CreateReviewRequest {
-
     @NotBlank(message = "L'ID de l'événement est requis")
     private String eventId;
 
@@ -24,4 +15,13 @@ public class CreateReviewRequest {
     private Integer note;
 
     private String commentaire;
+
+    public CreateReviewRequest() {}
+
+    public String getEventId() { return eventId; }
+    public void setEventId(String eventId) { this.eventId = eventId; }
+    public Integer getNote() { return note; }
+    public void setNote(Integer note) { this.note = note; }
+    public String getCommentaire() { return commentaire; }
+    public void setCommentaire(String commentaire) { this.commentaire = commentaire; }
 }

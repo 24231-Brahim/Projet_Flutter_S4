@@ -8,23 +8,27 @@ import com.eventhub.entity.User;
 import com.eventhub.exception.ResourceNotFoundException;
 import com.eventhub.mapper.NotificationMapper;
 import com.eventhub.repository.NotificationRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class NotificationService {
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
     private final UserService userService;
     private final NotificationMapper notificationMapper;
+
+    public NotificationService(NotificationRepository notificationRepository, UserService userService, NotificationMapper notificationMapper) {
+        this.notificationRepository = notificationRepository;
+        this.userService = userService;
+        this.notificationMapper = notificationMapper;
+    }
 
     @Transactional
     public NotificationResponse createNotification(CreateNotificationRequest request) {
@@ -110,14 +114,14 @@ public class NotificationService {
     }
 
     private PageResponse<NotificationResponse> toPageResponse(Page<Notification> page) {
-        return PageResponse.<NotificationResponse>builder()
-                .content(notificationMapper.toResponses(page.getContent()))
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .first(page.isFirst())
-                .last(page.isLast())
-                .build();
+        PageResponse<NotificationResponse> response = new PageResponse<>();
+        response.setContent(notificationMapper.toResponses(page.getContent()));
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalElements(page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        response.setFirst(page.isFirst());
+        response.setLast(page.isLast());
+        return response;
     }
 }

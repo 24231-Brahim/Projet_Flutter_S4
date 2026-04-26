@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/users")
-@RequiredArgsConstructor
 @Tag(name = "Users", description = "Gestion des utilisateurs")
 @SecurityRequirement(name = "bearerAuth")
 public class UserController {
@@ -30,13 +28,17 @@ public class UserController {
     private final UserService userService;
     private final CustomUserDetailsService userDetailsService;
 
+    public UserController(UserService userService, CustomUserDetailsService userDetailsService) {
+        this.userService = userService;
+        this.userDetailsService = userDetailsService;
+    }
+
     @GetMapping("/me")
     @Operation(summary = "Profil actuel", description = "Récupérer le profil de l'utilisateur connecté")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        String email = userDetails.getUsername();
-        UserResponse response = userService.getUserByEmail(email);
+        UserResponse response = userService.getUserByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

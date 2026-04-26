@@ -4,7 +4,6 @@ import com.eventhub.dto.response.BookingResponse;
 import com.eventhub.dto.response.BookingWithClientSecretResponse;
 import com.eventhub.entity.Booking;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 @Component
@@ -20,49 +19,45 @@ public class BookingMapper {
 
     public BookingResponse toResponse(Booking booking) {
         if (booking == null) return null;
-
-        return BookingResponse.builder()
-                .bookingId(booking.getBookingId())
-                .userId(booking.getUser() != null ? booking.getUser().getUid() : null)
-                .eventId(booking.getEvent() != null ? booking.getEvent().getEventId() : null)
-                .ticketId(booking.getTicket() != null ? booking.getTicket().getTicketId() : null)
-                .event(booking.getEvent() != null ? eventMapper.toResponse(booking.getEvent()) : null)
-                .ticket(booking.getTicket() != null ? ticketMapper.toResponse(booking.getTicket()) : null)
-                .quantite(booking.getQuantite())
-                .montantTotal(booking.getMontantTotal())
-                .devise(booking.getDevise())
-                .statut(booking.getStatut())
-                .qrCodeToken(booking.getQrCodeToken())
-                .qrCodeURL(booking.getQrCodeURL())
-                .pdfURL(booking.getPdfURL())
-                .paymentId(booking.getPaymentId())
-                .scannedAt(booking.getScannedAt())
-                .dateReservation(booking.getDateReservation())
-                .updatedAt(booking.getUpdatedAt())
-                .isPending(booking.isPending())
-                .isConfirmed(booking.isConfirmed())
-                .isCancelled(booking.isCancelled())
-                .isRefunded(booking.isRefunded())
-                .isUsed(booking.isUsed())
-                .isScanned(booking.isScanned())
-                .build();
+        BookingResponse response = new BookingResponse();
+        response.setBookingId(booking.getBookingId());
+        response.setUserId(booking.getUser() != null ? booking.getUser().getUid() : null);
+        response.setEventId(booking.getEvent() != null ? booking.getEvent().getEventId() : null);
+        response.setTicketId(booking.getTicket() != null ? booking.getTicket().getTicketId() : null);
+        response.setEvent(booking.getEvent() != null ? eventMapper.toResponse(booking.getEvent()) : null);
+        response.setTicket(booking.getTicket() != null ? ticketMapper.toResponse(booking.getTicket()) : null);
+        response.setQuantite(booking.getQuantite());
+        response.setMontantTotal(booking.getMontantTotal());
+        response.setDevise(booking.getDevise());
+        response.setStatut(booking.getStatut());
+        response.setQrCodeToken(booking.getQrCodeToken());
+        response.setQrCodeURL(booking.getQrCodeURL());
+        response.setPdfURL(booking.getPdfURL());
+        response.setPaymentId(booking.getPaymentId());
+        response.setScannedAt(booking.getScannedAt());
+        response.setDateReservation(booking.getDateReservation());
+        response.setUpdatedAt(booking.getUpdatedAt());
+        response.setIsPending(booking.isPending());
+        response.setIsConfirmed(booking.isConfirmed());
+        response.setIsCancelled(booking.isCancelled());
+        response.setIsRefunded(booking.isRefunded());
+        response.setIsUsed(booking.isUsed());
+        response.setIsScanned(booking.isScanned());
+        return response;
     }
 
     public BookingWithClientSecretResponse toClientSecretResponse(Booking booking, String clientSecret) {
         if (booking == null) return null;
-
-        return BookingWithClientSecretResponse.builder()
-                .bookingId(booking.getBookingId())
-                .clientSecret(clientSecret)
-                .paymentId(booking.getPaymentId())
-                .montantTotal(booking.getMontantTotal())
-                .statut(booking.getStatut())
-                .build();
+        BookingWithClientSecretResponse response = new BookingWithClientSecretResponse();
+        response.setBookingId(booking.getBookingId());
+        response.setClientSecret(clientSecret);
+        response.setPaymentId(booking.getPaymentId());
+        response.setMontantTotal(booking.getMontantTotal());
+        response.setStatut(booking.getStatut());
+        return response;
     }
 
     public List<BookingResponse> toResponses(List<Booking> bookings) {
-        return bookings.stream()
-                .map(this::toResponse)
-                .toList();
+        return bookings.stream().map(this::toResponse).toList();
     }
 }

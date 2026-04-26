@@ -1,7 +1,6 @@
 package com.eventhub.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -12,11 +11,6 @@ import java.util.Map;
 @Entity
 @Table(name = "notifications")
 @EntityListeners(AuditingEntityListener.class)
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Notification {
 
     @Id
@@ -41,39 +35,38 @@ public class Notification {
     @CollectionTable(name = "notification_data", joinColumns = @JoinColumn(name = "notif_id"))
     @MapKeyColumn(name = "data_key")
     @Column(name = "data_value")
-    @Builder.Default
     private Map<String, String> data = new HashMap<>();
 
     @Column(nullable = false)
-    @Builder.Default
     private Boolean lue = false;
 
     @CreatedDate
     @Column(name = "envoye_at", nullable = false, updatable = false)
     private LocalDateTime envoyeAt;
 
-    // Transient getters for Flutter model compatibility
-    public boolean isRead() {
-        return lue != null && lue;
-    }
+    public Notification() {}
 
-    public boolean isBookingConfirmed() {
-        return "booking_confirmed".equals(type);
-    }
+    public String getNotifId() { return notifId; }
+    public void setNotifId(String notifId) { this.notifId = notifId; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public String getTitre() { return titre; }
+    public void setTitre(String titre) { this.titre = titre; }
+    public String getCorps() { return corps; }
+    public void setCorps(String corps) { this.corps = corps; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public Map<String, String> getData() { return data; }
+    public void setData(Map<String, String> data) { this.data = data; }
+    public Boolean getLue() { return lue; }
+    public void setLue(Boolean lue) { this.lue = lue; }
+    public LocalDateTime getEnvoyeAt() { return envoyeAt; }
+    public void setEnvoyeAt(LocalDateTime envoyeAt) { this.envoyeAt = envoyeAt; }
 
-    public boolean isEventReminder() {
-        return "event_reminder".equals(type);
-    }
-
-    public boolean isTicketReady() {
-        return "ticket_ready".equals(type);
-    }
-
-    public boolean isCancellation() {
-        return "cancellation".equals(type);
-    }
-
-    public boolean isPromotion() {
-        return "promotion".equals(type);
-    }
+    public boolean isRead() { return lue != null && lue; }
+    public boolean isBookingConfirmed() { return "booking_confirmed".equals(type); }
+    public boolean isEventReminder() { return "event_reminder".equals(type); }
+    public boolean isTicketReady() { return "ticket_ready".equals(type); }
+    public boolean isCancellation() { return "cancellation".equals(type); }
+    public boolean isPromotion() { return "promotion".equals(type); }
 }

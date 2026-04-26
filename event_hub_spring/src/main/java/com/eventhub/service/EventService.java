@@ -7,7 +7,6 @@ import com.eventhub.dto.response.EventWithTicketsResponse;
 import com.eventhub.dto.response.PageResponse;
 import com.eventhub.dto.response.TicketResponse;
 import com.eventhub.entity.Event;
-import com.eventhub.entity.Ticket;
 import com.eventhub.entity.User;
 import com.eventhub.exception.*;
 import com.eventhub.mapper.EventMapper;
@@ -15,8 +14,8 @@ import com.eventhub.mapper.TicketMapper;
 import com.eventhub.repository.EventRepository;
 import com.eventhub.repository.ReviewRepository;
 import com.eventhub.repository.TicketRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class EventService {
+
+    private static final Logger log = LoggerFactory.getLogger(EventService.class);
 
     private final EventRepository eventRepository;
     private final TicketRepository ticketRepository;
@@ -36,6 +35,16 @@ public class EventService {
     private final EventMapper eventMapper;
     private final TicketMapper ticketMapper;
     private final UserService userService;
+
+    public EventService(EventRepository eventRepository, TicketRepository ticketRepository, ReviewRepository reviewRepository,
+                       EventMapper eventMapper, TicketMapper ticketMapper, UserService userService) {
+        this.eventRepository = eventRepository;
+        this.ticketRepository = ticketRepository;
+        this.reviewRepository = reviewRepository;
+        this.eventMapper = eventMapper;
+        this.ticketMapper = ticketMapper;
+        this.userService = userService;
+    }
 
     @Transactional
     public EventResponse createEvent(CreateEventRequest request, String organisateurId) {
@@ -58,12 +67,12 @@ public class EventService {
     @Transactional(readOnly = true)
     public EventWithTicketsResponse getEventWithTickets(String eventId) {
         Event event = findEventById(eventId);
-        List<Ticket> tickets = ticketRepository.findByEventEventIdAndActifTrue(eventId);
+        List<TicketResponse> tickets = ticketMapper.toResponses(ticketRepository.findAvailableByEvent(eventId));
 
-        return EventWithTicketsResponse.builder()
-                .event(enrichEventWithStats(eventMapper.toResponse(event)))
-                .tickets(ticketMapper.toResponses(tickets))
-                .build();
+        EventWithTicketsResponse response = new EventWithTicketsResponse();
+        response.setEvent(enrichEventWithStats(eventMapper.toResponse(event)));
+        response.setTickets(tickets);
+        return response;
     }
 
     @Transactional
@@ -186,14 +195,14 @@ public class EventService {
     }
 
     private PageResponse<EventResponse> toPageResponse(Page<Event> page) {
-        return PageResponse.<EventResponse>builder()
-                .content(eventMapper.toResponses(page.getContent()))
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .first(page.isFirst())
-                .last(page.isLast())
-                .build();
+        PageResponse<EventResponse> response = new PageResponse<>();
+        response.setContent(eventMapper.toResponses(page.getContent()));
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalElements(page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        response.setFirst(page.isFirst());
+        response.setLast(page.isLast());
+        return response;
     }
 }
